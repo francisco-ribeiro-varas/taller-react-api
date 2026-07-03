@@ -7,6 +7,22 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const raw = localStorage.getItem('favorites')
+      return raw ? JSON.parse(raw) : []
+    } catch (err) {
+      return []
+    }
+  })
+  const [blockedIds, setBlockedIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem('blocked')
+      return raw ? JSON.parse(raw) : []
+    } catch (err) {
+      return []
+    }
+  })
 
   useEffect(() => {
     const fetchPokemons = async () => {
@@ -40,15 +56,6 @@ function App() {
     fetchPokemons()
   }, [])
 
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const raw = localStorage.getItem('favorites')
-      return raw ? JSON.parse(raw) : []
-    } catch (err) {
-      return []
-    }
-  })
-
   useEffect(() => {
     try {
       localStorage.setItem('favorites', JSON.stringify(favorites))
@@ -57,11 +64,39 @@ function App() {
     }
   }, [favorites])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('blocked', JSON.stringify(blockedIds))
+    } catch (err) {
+      // ignore
+    }
+  }, [blockedIds])
+
+  useEffect(() => {
+    setFavorites((prev) => prev.filter((id) => !blockedIds.includes(id)))
+  }, [blockedIds])
+
   const toggleFavorite = (id) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
   }
 
+  const toggleBlocked = (id) => {
+    const isBlocked = blockedIds.includes(id)
+
+    if (isBlocked) {
+      setBlockedIds((prev) => prev.filter((item) => item !== id))
+      return
+    }
+
+    setBlockedIds((prev) => [...prev, id])
+    setFavorites((prev) => prev.filter((item) => item !== id))
+  }
+
   const filteredPokemons = pokemons.filter((pokemon) => {
+    if (blockedIds.includes(pokemon.id)) {
+      return false
+    }
+
     const normalizedSearch = searchTerm.trim().toLowerCase()
 
     if (!normalizedSearch) {
@@ -109,32 +144,45 @@ function App() {
 
       <div className="content-with-sidebar">
         <section className="pokemon-grid">
-          {filteredPokemons.map((pokemon) => (
-            <article key={pokemon.id} className="pokemon-card">
-              <button
-                className={`fav-btn ${favorites.includes(pokemon.id) ? 'fav-active' : ''}`}
-                onClick={() => toggleFavorite(pokemon.id)}
-                aria-pressed={favorites.includes(pokemon.id)}
-                title={favorites.includes(pokemon.id) ? 'Quitar favorito' : 'Marcar favorito'}
-              >
-                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" strokeWidth="1" />
-                  <path d="M2 16h28" stroke="#000" strokeWidth="2" />
-                  <circle cx="16" cy="16" r="5" fill="#fff" stroke="#000" strokeWidth="1.5" />
-                  <path d="M4 16a12 12 0 0 0 24 0" fill="#ef4444" opacity="0.95" />
-                </svg>
-              </button>
-              <span className="pokemon-id">#{pokemon.id.toString().padStart(3, '0')}</span>
-              <img src={pokemon.image} alt={pokemon.name} loading="lazy" />
-              <h2>{pokemon.name}</h2>
-            </article>
-          ))}
+          {filteredPokemons.map((pokemon) => {
+            const isBlocked = blockedIds.includes(pokemon.id)
+
+            return (
+              <article key={pokemon.id} className="pokemon-card">
+                <button
+                  className={`fav-btn ${favorites.includes(pokemon.id) ? 'fav-active' : ''}`}
+                  onClick={() => toggleFavorite(pokemon.id)}
+                  aria-pressed={favorites.includes(pokemon.id)}
+                  title={favorites.includes(pokemon.id) ? 'Quitar favorito' : 'Marcar favorito'}
+                >
+                  <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" strokeWidth="1" />
+                    <path d="M2 16h28" stroke="#000" strokeWidth="2" />
+                    <circle cx="16" cy="16" r="5" fill="#fff" stroke="#000" strokeWidth="1.5" />
+                    <path d="M4 16a12 12 0 0 0 24 0" fill="#ef4444" opacity="0.95" />
+                  </svg>
+                </button>
+                <button
+                  className={`block-btn ${isBlocked ? 'blocked' : ''}`}
+                  onClick={() => toggleBlocked(pokemon.id)}
+                  title={isBlocked ? 'Desbloquear Pokémon' : 'Bloquear Pokémon'}
+                >
+                  {isBlocked ? '🔓' : '🔒'}
+                </button>
+                <span className="pokemon-id">#{pokemon.id.toString().padStart(3, '0')}</span>
+                <img src={pokemon.image} alt={pokemon.name} loading="lazy" />
+                <h2>{pokemon.name}</h2>
+              </article>
+            )
+          })}
         </section>
 
         <SidebarFavorites
           pokemons={pokemons}
           favorites={favorites}
+          blockedIds={blockedIds}
           onToggle={toggleFavorite}
+          onToggleBlocked={toggleBlocked}
         />
       </div>
     </main>

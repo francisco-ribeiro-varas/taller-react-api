@@ -1,9 +1,13 @@
 import React, { useState } from 'react'
 
-export default function SidebarFavorites({ pokemons = [], favorites = [], onToggle }) {
+export default function SidebarFavorites({ pokemons = [], favorites = [], blockedIds = [], onToggle, onToggleBlocked }) {
   const [open, setOpen] = useState(true)
 
   const favoritePokemons = favorites
+    .map((id) => pokemons.find((p) => p.id === id))
+    .filter(Boolean)
+
+  const blockedPokemons = blockedIds
     .map((id) => pokemons.find((p) => p.id === id))
     .filter(Boolean)
 
@@ -37,6 +41,26 @@ export default function SidebarFavorites({ pokemons = [], favorites = [], onTogg
               </li>
             ))}
           </ul>
+
+          {blockedPokemons.length > 0 && (
+            <div className="blocked-section">
+              <h4>Bloqueados</h4>
+              <ul>
+                {blockedPokemons.map((p) => (
+                  <li key={p.id} className="fav-item blocked-item">
+                    <img src={p.image} alt={p.name} />
+                    <div className="fav-meta">
+                      <strong>{p.name}</strong>
+                      <span>#{p.id.toString().padStart(3, '0')}</span>
+                    </div>
+                    <button className="remove-btn" onClick={() => onToggleBlocked(p.id)} aria-label={`Desbloquear ${p.name}`}>
+                      🔓
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </aside>
