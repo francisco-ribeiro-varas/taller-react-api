@@ -146,3 +146,109 @@
     font-size: 1.7rem;
   }
 }
+
+/* Sidebar and favorites */
+.content-with-sidebar {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.fav-btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.fav-btn:hover {
+  transform: scale(1.05);
+}
+
+.fav-active {
+  background: #fef2f2;
+  color: #ef4444;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.12);
+}
+
+.pokemon-card { position: relative; }
+
+.sidebar-favs {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  height: fit-content;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.sidebar-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 0.5rem 0.25rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sidebar-content { margin-top: 0.5rem; }
+
+.sidebar-content h3 { margin: 0 0 0.5rem 0; }
+.empty { color: #6b7280; font-weight: 600; }
+
+.fav-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed #f3f4f6;
+}
+
+.fav-item img { width: 48px; height: 48px; object-fit: contain; }
+.fav-meta { flex: 1; display:flex; flex-direction:column; gap:2px; }
+.fav-meta strong { text-transform: capitalize; }
+.remove-btn { background: transparent; border: none; cursor: pointer; font-size: 14px; }
+
+@media (max-width: 900px) {
+  .content-with-sidebar { grid-template-columns: 1fr; }
+  .sidebar-favs { order: 2; }
+}
+
+/* Animations & Pokemon theme tweaks */
+.fav-btn svg { width: 18px; height: 18px; display: block; }
+.fav-active svg { animation: poke-pop 420ms cubic-bezier(.2,.9,.2,1); }
+
+@keyframes poke-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.pokemon-card:hover { transform: translateY(-8px) rotate(-2deg); }
+.pokemon-card img { transition: transform 260ms ease; }
+.pokemon-card:hover img { transform: translateY(-6px) scale(1.02); }
+
+.pokemon-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
+  border-radius: 20px;
+}
+
+.sidebar-favs { border-left: 4px solid #ef4444; }
+
+.sidebar-content h3 { display:flex; align-items:center; gap:8px; }
+
+.fav-item { position:relative; }
+
+.remove-btn { color: #6b7280; }
+.remove-btn:hover { color: #b91c1c; transform: scale(1.05); }
