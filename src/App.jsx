@@ -5,6 +5,7 @@ function App() {
   const [pokemons, setPokemons] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     const fetchPokemons = async () => {
@@ -38,6 +39,19 @@ function App() {
     fetchPokemons()
   }, [])
 
+  const filteredPokemons = pokemons.filter((pokemon) => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    if (!normalizedSearch) {
+      return true
+    }
+
+    return (
+      pokemon.name.toLowerCase().includes(normalizedSearch) ||
+      pokemon.id.toString().includes(normalizedSearch)
+    )
+  })
+
   return (
     <main className="app">
       <header className="hero">
@@ -48,11 +62,31 @@ function App() {
         </p>
       </header>
 
+      <section className="toolbar">
+        <label className="search-field" htmlFor="pokemon-search">
+          <span className="search-label">Buscar Pokémon</span>
+          <input
+            id="pokemon-search"
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Ej. Pikachu"
+          />
+        </label>
+        <p className="results-count">
+          {filteredPokemons.length} de {pokemons.length} Pokémon
+        </p>
+      </section>
+
       {loading && <p className="status">Cargando Pokémon...</p>}
       {error && <p className="status error">{error}</p>}
 
+      {!loading && !error && filteredPokemons.length === 0 && (
+        <p className="status">No se encontraron Pokémon con ese término.</p>
+      )}
+
       <section className="pokemon-grid">
-        {pokemons.map((pokemon) => (
+        {filteredPokemons.map((pokemon) => (
           <article key={pokemon.id} className="pokemon-card">
             <span className="pokemon-id">#{pokemon.id.toString().padStart(3, '0')}</span>
             <img src={pokemon.image} alt={pokemon.name} loading="lazy" />
