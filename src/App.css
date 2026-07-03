@@ -1,16 +1,55 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, 'Segoe UI', Roboto, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #111827;
+  background-color: #f8fafc;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #ffe4b5 0%, #f8fafc 45%, #e2e8f0 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
 .app {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.25rem;
 }
 
 .hero {
-  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
-  border-radius: 24px;
+  background: linear-gradient(135deg, #d7263d 0%, #ff8c42 100%);
+  border-radius: 28px;
   padding: 2rem;
   color: white;
-  margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+  border: 4px solid #7f1d1d;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.3), transparent 40%);
+  pointer-events: none;
 }
 
 .eyebrow {
@@ -39,7 +78,7 @@
 .status {
   text-align: center;
   font-weight: 600;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   color: #374151;
 }
 
@@ -53,7 +92,12 @@
   justify-content: space-between;
   align-items: end;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: #1f2937;
+  color: white;
+  box-shadow: inset 0 0 0 2px #374151, 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .search-field {
@@ -67,27 +111,39 @@
 .search-label {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #374151;
+  color: #fbbf24;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .search-field input {
-  border: 1px solid #d1d5db;
+  width: 100%;
+  border: 2px solid #4b5563;
   border-radius: 999px;
   padding: 0.8rem 1rem;
   font-size: 1rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background: #fef3c7;
+  color: #111827;
 }
 
 .search-field input:focus {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
 
 .results-count {
   margin: 0;
-  color: #6b7280;
+  color: #e5e7eb;
   font-weight: 600;
+}
+
+.content-with-sidebar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
 }
 
 .pokemon-grid {
@@ -97,26 +153,28 @@
 }
 
 .pokemon-card {
-  background: white;
+  position: relative;
+  background: linear-gradient(145deg, #fffdf8 0%, #fef2f2 100%);
   border-radius: 20px;
   padding: 1rem;
   text-align: center;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  border: 3px solid #1f2937;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pokemon-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px) rotate(-1.5deg);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.2);
 }
 
 .pokemon-id {
   display: inline-block;
   margin-bottom: 0.5rem;
-  color: #6b7280;
+  color: #b91c1c;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .pokemon-card img {
@@ -124,6 +182,11 @@
   height: 140px;
   object-fit: contain;
   margin-bottom: 0.75rem;
+  transition: transform 260ms ease;
+}
+
+.pokemon-card:hover img {
+  transform: translateY(-6px) scale(1.02);
 }
 
 .pokemon-card h2 {
@@ -131,28 +194,7 @@
   font-size: 1rem;
   color: #111827;
   text-transform: capitalize;
-}
-
-@media (max-width: 600px) {
-  .app {
-    padding: 1rem;
-  }
-
-  .hero {
-    padding: 1.25rem;
-  }
-
-  .hero h1 {
-    font-size: 1.7rem;
-  }
-}
-
-/* Sidebar and favorites */
-.content-with-sidebar {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 1rem;
-  align-items: start;
+  font-weight: 800;
 }
 
 .fav-btn,
@@ -196,15 +238,15 @@
   color: #b91c1c;
 }
 
-.pokemon-card { position: relative; }
-
 .sidebar-favs {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  position: sticky;
+  top: 1rem;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+  border-radius: 18px;
+  border: 3px solid #1f2937;
   padding: 0.75rem;
   height: fit-content;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
 }
 
 .sidebar-toggle {
@@ -217,11 +259,26 @@
   cursor: pointer;
 }
 
-.sidebar-content { margin-top: 0.5rem; }
+.sidebar-content {
+  margin-top: 0.5rem;
+}
 
-.sidebar-content h3 { margin: 0 0 0.5rem 0; }
-.sidebar-content h4 { margin: 0.75rem 0 0.35rem; color: #374151; }
-.empty { color: #6b7280; font-weight: 600; }
+.sidebar-content h3 {
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-content h4 {
+  margin: 0.75rem 0 0.35rem;
+  color: #374151;
+}
+
+.empty {
+  color: #6b7280;
+  font-weight: 600;
+}
 
 .fav-item {
   display: flex;
@@ -229,43 +286,119 @@
   align-items: center;
   padding: 0.35rem 0;
   border-bottom: 1px dashed #f3f4f6;
+  position: relative;
 }
 
-.fav-item img { width: 48px; height: 48px; object-fit: contain; }
-.fav-meta { flex: 1; display:flex; flex-direction:column; gap:2px; }
-.fav-meta strong { text-transform: capitalize; }
-.remove-btn { background: transparent; border: none; cursor: pointer; font-size: 14px; }
-
-@media (max-width: 900px) {
-  .content-with-sidebar { grid-template-columns: 1fr; }
-  .sidebar-favs { order: 2; }
+.fav-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
 }
 
-/* Animations & Pokemon theme tweaks */
-.fav-btn svg { width: 18px; height: 18px; display: block; }
-.fav-active svg { animation: poke-pop 420ms cubic-bezier(.2,.9,.2,1); }
+.fav-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fav-meta strong {
+  text-transform: capitalize;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.remove-btn:hover {
+  color: #b91c1c;
+  transform: scale(1.05);
+}
+
+.blocked-item img {
+  opacity: 0.7;
+}
+
+.fav-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.fav-active svg {
+  animation: poke-pop 420ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
 
 @keyframes poke-pop {
-  0% { transform: scale(0.6); }
-  60% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-.pokemon-card:hover { transform: translateY(-8px) rotate(-2deg); }
-.pokemon-card img { transition: transform 260ms ease; }
-.pokemon-card:hover img { transform: translateY(-6px) scale(1.02); }
+@media (max-width: 900px) {
+  .content-with-sidebar {
+    grid-template-columns: 1fr;
+  }
 
-.pokemon-card {
-  background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
-  border-radius: 20px;
+  .sidebar-favs {
+    position: static;
+  }
 }
 
-.sidebar-favs { border-left: 4px solid #ef4444; }
+@media (max-width: 640px) {
+  .app {
+    padding: 1rem;
+  }
 
-.sidebar-content h3 { display:flex; align-items:center; gap:8px; }
+  .hero {
+    padding: 1.25rem;
+    border-radius: 18px;
+  }
 
-.fav-item { position:relative; }
-.blocked-item img { opacity: 0.7; }
+  .hero h1 {
+    font-size: 1.7rem;
+  }
 
-.remove-btn { color: #6b7280; }
-.remove-btn:hover { color: #b91c1c; transform: scale(1.05); }
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .search-field {
+    min-width: 0;
+  }
+
+  .results-count {
+    text-align: left;
+  }
+
+  .pokemon-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .pokemon-card {
+    padding: 0.8rem;
+  }
+
+  .pokemon-card img {
+    height: 110px;
+  }
+
+  .fav-btn,
+  .block-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
+
