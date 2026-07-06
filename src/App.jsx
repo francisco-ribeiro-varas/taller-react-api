@@ -52,6 +52,44 @@ const fetchWithTimeout = async (url, timeout = 8000) => {
   }
 }
 
+const getMegaEvolutionInfo = async (speciesData) => {
+  const variedades = speciesData?.varieties || []
+  const megaVarieties = variedades.filter((variety) => variety?.pokemon?.name?.includes('mega'))
+
+  if (megaVarieties.length === 0) {
+    return {
+      canMegaEvolve: false,
+      requires: 'No',
+      typeCombos: []
+    }
+  }
+
+  const resolvedForms = await Promise.allSettled(
+    megaVarieties.map(async (variety) => {
+      const response = await fetchWithTimeout(variety.pokemon.url).catch(() => null)
+      const data = response ? await response.json().catch(() => null) : null
+      const types = data?.types?.map(({ type }) => type.name) || []
+
+      return {
+        name: variety.pokemon.name,
+        types
+      }
+    })
+  )
+
+  const forms = resolvedForms
+    .filter((result) => result.status === 'fulfilled' && result.value)
+    .map((result) => result.value)
+
+  const typeCombos = [...new Set(forms.map((form) => form.types.join(' / ')).filter(Boolean))]
+
+  return {
+    canMegaEvolve: forms.length > 0,
+    requires: 'Mega piedra',
+    typeCombos
+  }
+}
+
 function App() {
   const [pokemons, setPokemons] = useState([])
   const [loading, setLoading] = useState(true)
@@ -168,13 +206,9 @@ function App() {
       try {
         setModalLoading(true)
         const [pokemonResponse, speciesResponse] = await Promise.all([
-          fetch(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon.id}`),
-          fetch(`https://pokeapi.co/api/v2/pokemon-species/${selectedPokemon.id}`)
+          fetchWithTimeout(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon.id}`),
+          fetchWithTimeout(`https://pokeapi.co/api/v2/pokemon-species/${selectedPokemon.id}`)
         ])
-
-        if (!pokemonResponse.ok || !speciesResponse.ok) {
-          throw new Error('No se pudo cargar la información del Pokémon')
-        }
 
         const pokemonData = await pokemonResponse.json()
         const speciesData = await speciesResponse.json()
@@ -189,6 +223,8 @@ function App() {
           needsStone: false,
           stoneName: null
         }
+
+        const megaEvolutionInfo = await getMegaEvolutionInfo(speciesData)
 
         if (speciesData.evolution_chain?.url) {
           const evolutionResponse = await fetch(speciesData.evolution_chain.url)
@@ -221,7 +257,8 @@ function App() {
           types: pokemonData.types.map(({ type }) => type.name).join(', '),
           gender: getGenderLabel(speciesData.gender_rate),
           description: descriptionEntry?.flavor_text?.replace(/\f/g, ' ') || 'Sin descripción disponible.',
-          evolution: evolutionInfo
+          evolution: evolutionInfo,
+          megaEvolution: megaEvolutionInfo
         })
       } catch (err) {
         setModalData({
@@ -236,6 +273,11 @@ function App() {
             level: 'No evoluciona',
             needsStone: false,
             stoneName: null
+          },
+          megaEvolution: {
+            canMegaEvolve: false,
+            requires: 'No',
+            typeCombos: []
           }
         })
       } finally {
@@ -402,6 +444,14 @@ function App() {
                   <div>
                     <span className="modal-label">Piedra para evolucionar</span>
                     <p>{modalData.evolution.needsStone ? `Sí — ${modalData.evolution.stoneName}` : 'No'}</p>
+                  </div>
+                  <div>
+                    <span className="modal-label">Megaevolución</span>
+                    <p>{modalData.megaEvolution.canMegaEvolve ? `Sí — ${modalData.megaEvolution.requires}` : 'No'}</p>
+                  </div>
+                  <div>
+                    <span className="modal-label">Tipos de megaevolución</span>
+                    <p>{modalData.megaEvolution.typeCombos.length > 0 ? modalData.megaEvolution.typeCombos.join(' · ') : 'No aplica'}</p>
                   </div>
                 </div>
 
