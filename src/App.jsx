@@ -149,20 +149,35 @@ function App() {
         const response = await fetchWithTimeout('https://pokeapi.co/api/v2/pokemon?limit=1500')
         const data = await response.json()
 
-        const mappedPokemons = data.results.map((pokemon) => {
-          const id = Number(pokemon.url.split('/').filter(Boolean).pop())
-          const { official, sprite } = getPokemonImage(id)
+        const mappedPokemons = await Promise.allSettled(
+          data.results.map(async (pokemon) => {
+            const id = Number(pokemon.url.split('/').filter(Boolean).pop())
+            const { official, sprite } = getPokemonImage(id)
 
-          return {
-            id,
-            name: pokemon.name,
-            image: official,
-            fallbackImage: sprite,
-            gender: 'sin-sexo'
-          }
-        })
+            let gender = 'sin-sexo'
+            try {
+              const speciesResponse = await fetchWithTimeout(`https://pokeapi.co/api/v2/pokemon-species/${id}`)
+              const speciesData = await speciesResponse.json().catch(() => null)
+              gender = getGenderFromSpecies(speciesData?.gender_rate)
+            } catch (err) {
+              gender = 'sin-sexo'
+            }
 
-        setPokemons(mappedPokemons)
+            return {
+              id,
+              name: pokemon.name,
+              image: official,
+              fallbackImage: sprite,
+              gender
+            }
+          })
+        )
+
+        setPokemons(
+          mappedPokemons
+            .filter((result) => result.status === 'fulfilled')
+            .map((result) => result.value)
+        )
       } catch (err) {
         setError(err.message)
       } finally {
