@@ -52,6 +52,32 @@ const fetchWithTimeout = async (url, timeout = 8000) => {
   }
 }
 
+const getPokemonImage = (id) => {
+  const official = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
+  const sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`
+  return { official, sprite }
+}
+
+const getDescription = (speciesData) => {
+  const entries = speciesData?.flavor_text_entries || []
+  const preferred = entries.find((entry) => entry?.language?.name === 'es')
+  const fallback = entries.find((entry) => entry?.language?.name === 'en')
+  const anyEntry = entries[0]
+
+  const description = (preferred || fallback || anyEntry)?.flavor_text?.replace(/\f/g, ' ')
+
+  if (description) {
+    return description
+  }
+
+  if (speciesData?.genera?.length) {
+    const genus = speciesData.genera.find((entry) => entry?.language?.name === 'es') || speciesData.genera[0]
+    return `Pokémon ${genus?.genus || 'sin descripción disponible'}.`
+  }
+
+  return 'Descripción no disponible para este Pokémon.'
+}
+
 const getMegaEvolutionInfo = async (speciesData) => {
   const variedades = speciesData?.varieties || []
   const megaVarieties = variedades.filter((variety) => variety?.pokemon?.name?.includes('mega'))
@@ -123,33 +149,20 @@ function App() {
         const response = await fetchWithTimeout('https://pokeapi.co/api/v2/pokemon?limit=1500')
         const data = await response.json()
 
-        const mappedPokemons = await Promise.allSettled(
-          data.results.map(async (pokemon) => {
-            const id = Number(pokemon.url.split('/').filter(Boolean).pop())
-            const speciesResponse = await fetchWithTimeout(`https://pokeapi.co/api/v2/pokemon-species/${id}`).catch(() => null)
-            const speciesData = speciesResponse ? await speciesResponse.json().catch(() => null) : null
+        const mappedPokemons = data.results.map((pokemon) => {
+          const id = Number(pokemon.url.split('/').filter(Boolean).pop())
+          const { official, sprite } = getPokemonImage(id)
 
-            return {
-              id,
-              name: pokemon.name,
-              image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`,
-              gender: getGenderFromSpecies(speciesData?.gender_rate)
-            }
-          })
-        )
+          return {
+            id,
+            name: pokemon.name,
+            image: official,
+            fallbackImage: sprite,
+            gender: 'sin-sexo'
+          }
+        })
 
-        const resolvedPokemons = mappedPokemons.map((result) =>
-          result.status === 'fulfilled'
-            ? result.value
-            : {
-                id: 0,
-                name: 'Pokémon sin cargar',
-                image: '',
-                gender: 'sin-sexo'
-              }
-        )
-
-        setPokemons(resolvedPokemons.filter((pokemon) => pokemon.id !== 0))
+        setPokemons(mappedPokemons)
       } catch (err) {
         setError(err.message)
       } finally {
@@ -205,17 +218,14 @@ function App() {
     const loadPokemonDetails = async () => {
       try {
         setModalLoading(true)
-        const [pokemonResponse, speciesResponse] = await Promise.all([
+        const [pokemonResponse, speciesResponse] = await Promise.allSettled([
           fetchWithTimeout(`https://pokeapi.co/api/v2/pokemon/${selectedPokemon.id}`),
           fetchWithTimeout(`https://pokeapi.co/api/v2/pokemon-species/${selectedPokemon.id}`)
         ])
 
-        const pokemonData = await pokemonResponse.json()
-        const speciesData = await speciesResponse.json()
-        const descriptionEntry =
-          speciesData.flavor_text_entries.find((entry) => entry.language.name === 'es') ||
-          speciesData.flavor_text_entries.find((entry) => entry.language.name === 'en') ||
-          speciesData.flavor_text_entries[0]
+        const pokemonData = pokemonResponse.status === 'fulfilled' ? await pokemonResponse.value.json().catch(() => null) : null
+        const speciesData = speciesResponse.status === 'fulfilled' ? await speciesResponse.value.json().catch(() => null) : null
+        const description = getDescription(speciesData)
 
         let evolutionInfo = {
           nextForm: null,
@@ -226,12 +236,12 @@ function App() {
 
         const megaEvolutionInfo = await getMegaEvolutionInfo(speciesData)
 
-        if (speciesData.evolution_chain?.url) {
-          const evolutionResponse = await fetch(speciesData.evolution_chain.url)
+        if (speciesData?.evolution_chain?.url) {
+          const evolutionResponse = await fetchWithTimeout(speciesData.evolution_chain.url).catch(() => null)
 
-          if (evolutionResponse.ok) {
-            const evolutionData = await evolutionResponse.json()
-            const currentNode = findEvolutionNode(evolutionData.chain, selectedPokemon.name)
+          if (evolutionResponse?.ok) {
+            const evolutionData = await evolutionResponse.json().catch(() => null)
+            const currentNode = findEvolutionNode(evolutionData?.chain, selectedPokemon.name)
             const nextEvolution = currentNode?.evolves_to?.[0]
 
             if (nextEvolution) {
@@ -250,13 +260,17 @@ function App() {
           }
         }
 
+        const modalImage = pokemonData?.sprites?.other?.['official-artwork']?.front_default || pokemonData?.sprites?.front_default || selectedPokemon.image
+        const fallbackModalImage = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.id}.png`
+
         setModalData({
-          id: pokemonData.id,
-          name: pokemonData.name,
-          image: pokemonData.sprites?.other?.['official-artwork']?.front_default || pokemonData.sprites?.front_default,
-          types: pokemonData.types.map(({ type }) => type.name).join(', '),
-          gender: getGenderLabel(speciesData.gender_rate),
-          description: descriptionEntry?.flavor_text?.replace(/\f/g, ' ') || 'Sin descripción disponible.',
+          id: pokemonData?.id || selectedPokemon.id,
+          name: pokemonData?.name || selectedPokemon.name,
+          image: modalImage,
+          fallbackImage: fallbackModalImage,
+          types: pokemonData?.types?.map(({ type }) => type.name).join(', ') || 'Sin información',
+          gender: getGenderLabel(speciesData?.gender_rate),
+          description,
           evolution: evolutionInfo,
           megaEvolution: megaEvolutionInfo
         })
@@ -392,7 +406,14 @@ function App() {
                   {isBlocked ? '🔓' : '🔒'}
                 </button>
                 <span className="pokemon-id">#{pokemon.id.toString().padStart(3, '0')}</span>
-                <img src={pokemon.image} alt={pokemon.name} loading="lazy" />
+                <img
+                  src={pokemon.image}
+                  alt={pokemon.name}
+                  loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget.src = pokemon.fallbackImage || '/pokeball-placeholder.png'
+                  }}
+                />
                 <h2>{pokemon.name}</h2>
               </article>
             )
@@ -420,7 +441,13 @@ function App() {
             {!modalLoading && modalData && (
               <>
                 <div className="modal-header">
-                  <img src={modalData.image} alt={modalData.name} />
+                  <img
+                    src={modalData.image}
+                    alt={modalData.name}
+                    onError={(event) => {
+                      event.currentTarget.src = modalData.fallbackImage || '/pokeball-placeholder.png'
+                    }}
+                  />
                   <div>
                     <p className="modal-id">#{modalData.id.toString().padStart(3, '0')}</p>
                     <h3>{modalData.name}</h3>
