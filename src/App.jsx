@@ -329,6 +329,11 @@ function App() {
         <p className="hero-text">
           Esta página consume la API de Pokémon y muestra un diseño simple con tarjetas e imágenes.
         </p>
+        <div className="hero-names" aria-label="Integrantes">
+          <span>Diego Lazo</span>
+          <span>Alexandra Naranjo</span>
+          <span>Francisco Ribeiro</span>
+        </div>
       </header>
 
       <section className="toolbar">

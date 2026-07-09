@@ -75,6 +75,24 @@ input {
   font-size: clamp(0.95rem, 1.8vw, 1rem);
   line-height: 1.6;
   opacity: 0.95;
+  margin-bottom: 0.9rem;
+}
+
+.hero-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.25rem;
+}
+
+.hero-names span {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
 .status {
@@ -270,6 +288,7 @@ input {
   padding: 0.7rem 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
 }
 
 .sidebar-content {
@@ -374,8 +393,25 @@ input {
   }
 
   .sidebar-favs {
-    position: relative;
-    top: auto;
+    position: fixed;
+    top: 0.7rem;
+    right: 0.7rem;
+    z-index: 70;
+    width: min(92vw, 320px);
+    max-width: 320px;
+    padding: 0.55rem;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebar-content {
+    max-height: min(78vh, 500px);
+    overflow-y: auto;
+    padding-right: 0.15rem;
+  }
+
+  .sidebar-toggle {
+    width: 100%;
+    border-radius: 999px;
   }
 }
 
